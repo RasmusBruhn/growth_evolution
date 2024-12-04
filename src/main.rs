@@ -2,8 +2,9 @@ use std::env;
 
 use winit::dpi::PhysicalSize;
 
-mod application;
-mod render;
+pub mod application;
+pub mod graphics;
+pub mod render;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -12,11 +13,22 @@ fn main() {
     let crate_name = env!("CARGO_PKG_NAME");
     let crate_version = env!("CARGO_PKG_VERSION");
 
-    // Setup the main loop
+    // Set basic settings
     let name = format!("{crate_name} v{crate_version}");
     let size = PhysicalSize::new(500, 500);
-    let mut main_loop = application::MainLoop::new(name, size);
+
+    // Set graphics settings
+    let background_color = wgpu::Color {
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    let graphics_state = graphics::State::new(background_color);
+
+    // Setup the main loop
+    let mut main_loop = application::MainLoop::new(name, size, graphics_state);
 
     // Run the application
-    pollster::block_on(application::run(&mut main_loop));
+    application::run(&mut main_loop);
 }

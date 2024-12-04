@@ -1,9 +1,11 @@
+use crate::{graphics, render};
 use winit::{
-    application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop, window::Window
+    application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop,
+    window::Window,
 };
 
 /// Runs the application
-pub async fn run(main_loop: &mut MainLoop) {
+pub fn run(main_loop: &mut MainLoop) {
     // Setup logging
     env_logger::init();
 
@@ -29,7 +31,9 @@ pub struct MainLoop {
     /// The size of the application window
     size: PhysicalSize<u32>,
     /// The currently opened window of the application
-    window: Option<Window>,
+    window: Option<render::RenderedWindow>,
+    /// The settings for rendering
+    graphics_state: graphics::State,
 }
 
 impl MainLoop {
@@ -40,20 +44,21 @@ impl MainLoop {
     /// name: The name of the application shown on the window
     ///
     /// size: The size of the window in pixels
-    pub fn new(name: String, size: PhysicalSize<u32>) -> Self {
+    pub fn new(name: String, size: PhysicalSize<u32>, graphics_state: graphics::State) -> Self {
         return Self {
             name,
             size,
             window: None,
+            graphics_state,
         };
     }
 
     /// Handles a window event for the main window
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// event_loop: The event loop currently running
-    /// 
+    ///
     /// event: The event to be handled
     fn main_window_event(
         &mut self,
@@ -70,9 +75,9 @@ impl MainLoop {
     }
 
     /// Run when the main window is to be closed
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// event_loop: The event loop currently running
     fn main_window_close_request(&self, event_loop: &winit::event_loop::ActiveEventLoop) {
         // Stop the application
@@ -81,12 +86,39 @@ impl MainLoop {
 
     /// Run when the main window must be redrawn
     fn main_window_redraw_requested(&self) {
-        println!("Redrawing main window");
+        let window = self.window.as_ref().expect("Should not happen");
+
+        // Get the current view
+        let output_texture = match window
+            .get_render_state()
+            .get_surface()
+            .get_current_texture()
+        {
+            Ok(value) => value,
+            Err(error) => {
+                eprintln!("Unable to get texture: {:?}", error);
+                return;
+            }
+        };
+        let view = output_texture
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        // Draw the map
+        self.graphics_state.render(window.get_render_state(), &view);
+
+        // Show to screen
+        output_texture.present();
     }
 
     /// Run when the size of the window has changed
     fn main_window_resized(&mut self, size: PhysicalSize<u32>) {
         self.size = size;
+        self.window
+            .as_mut()
+            .expect("Should not happen")
+            .get_render_state_mut()
+            .resize(size);
     }
 }
 
@@ -97,11 +129,24 @@ impl ApplicationHandler for MainLoop {
             .with_title(&self.name)
             .with_inner_size(self.size);
 
-        self.window = Some(
-            event_loop
-                .create_window(window_attributes)
-                .expect("Unable to create window"),
-        );
+        let window = match event_loop.create_window(window_attributes) {
+            Ok(value) => value,
+            Err(error) => {
+                eprintln!("Unable to create window: {:?}", error);
+                event_loop.exit();
+                return;
+            }
+        };
+
+        // Add a render state
+        self.window = match pollster::block_on(render::RenderedWindow::new(window)) {
+            Ok(value) => Some(value),
+            Err(error) => {
+                eprintln!("Unable to add render state: {:?}", error);
+                event_loop.exit();
+                return;
+            }
+        }
     }
 
     fn window_event(
@@ -120,7 +165,7 @@ impl ApplicationHandler for MainLoop {
         };
 
         // Find the correct window and handle event correspondingly
-        if window_id == window.id() {
+        if window_id == window.get_window().id() {
             self.main_window_event(event_loop, event);
         }
     }
