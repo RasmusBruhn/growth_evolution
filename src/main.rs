@@ -20,14 +20,16 @@ fn main() {
     // Set graphics settings
     let background_color = wgpu::Color {
         r: 1.0,
-        g: 0.0,
-        b: 0.0,
+        g: 1.0,
+        b: 1.0,
         a: 1.0,
     };
-    let graphics_state = graphics::State::new(background_color);
+    let graphics_settings = graphics::Settings {
+        background: background_color,
+    };
 
     // Setup the main loop
-    let mut main_loop = application::MainLoop::new(name, size, graphics_state);
+    let mut main_loop = application::MainLoop::new(name, size, graphics_settings);
 
     // Run the application
     application::run(&mut main_loop);

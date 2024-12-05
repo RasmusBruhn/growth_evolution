@@ -149,46 +149,6 @@ impl RenderState {
     }
 }
 
-/// A window with an assosciated render state
-pub struct RenderedWindow {
-    /// The window, it must be in an Arc because it is shared with the render state
-    window: Arc<Window>,
-    /// The render state to render onto the window
-    render_state: RenderState,
-}
-
-impl RenderedWindow {
-    /// Constructs a new rendered window
-    ///
-    /// # Parameters
-    ///
-    /// window: The window to add a render state to
-    pub async fn new(window: Window) -> Result<Self, NewRenderStateError> {
-        let window = Arc::new(window);
-        let render_state = RenderState::new(&window).await?;
-
-        return Ok(Self {
-            window,
-            render_state,
-        });
-    }
-
-    /// Retrieves a reference to the render state
-    pub fn get_render_state(&self) -> &RenderState {
-        return &self.render_state;
-    }
-
-    /// Retrieves a mutable reference to the render state
-    pub fn get_render_state_mut(&mut self) -> &mut RenderState {
-        return &mut self.render_state;
-    }
-
-    /// Retrieves a reference to the window
-    pub fn get_window(&self) -> &Window {
-        return &self.window;
-    }
-}
-
 /// The error types for when creating a new RenderState
 #[derive(Error, Debug, Clone)]
 pub enum NewRenderStateError {

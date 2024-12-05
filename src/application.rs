@@ -1,4 +1,5 @@
 use crate::{graphics, render};
+use std::sync::Arc;
 use winit::{
     application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop,
     window::Window,
@@ -30,10 +31,10 @@ pub struct MainLoop {
     name: String,
     /// The size of the application window
     size: PhysicalSize<u32>,
-    /// The currently opened window of the application
-    window: Option<render::RenderedWindow>,
     /// The settings for rendering
-    graphics_state: graphics::State,
+    graphics_settings: graphics::Settings,
+    /// The currently opened window of the application
+    window: Option<RenderedWindow>,
 }
 
 impl MainLoop {
@@ -44,12 +45,12 @@ impl MainLoop {
     /// name: The name of the application shown on the window
     ///
     /// size: The size of the window in pixels
-    pub fn new(name: String, size: PhysicalSize<u32>, graphics_state: graphics::State) -> Self {
+    pub fn new(name: String, size: PhysicalSize<u32>, graphics_settings: graphics::Settings) -> Self {
         return Self {
             name,
             size,
+            graphics_settings,
             window: None,
-            graphics_state,
         };
     }
 
@@ -105,7 +106,7 @@ impl MainLoop {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         // Draw the map
-        self.graphics_state.render(window.get_render_state(), &view);
+        window.graphics_state.render(window.get_render_state(), &view);
 
         // Show to screen
         output_texture.present();
@@ -139,7 +140,7 @@ impl ApplicationHandler for MainLoop {
         };
 
         // Add a render state
-        self.window = match pollster::block_on(render::RenderedWindow::new(window)) {
+        self.window = match pollster::block_on(RenderedWindow::new(window, self.graphics_settings)) {
             Ok(value) => Some(value),
             Err(error) => {
                 eprintln!("Unable to add render state: {:?}", error);
@@ -178,5 +179,49 @@ impl ApplicationHandler for MainLoop {
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
         // Close the window
         self.window = None;
+    }
+}
+
+/// A window with an assosciated render state
+pub struct RenderedWindow {
+    /// The window, it must be in an Arc because it is shared with the render state
+    window: Arc<Window>,
+    /// The render state to render onto the window
+    render_state: render::RenderState,
+    /// The graphics state used for rendering
+    graphics_state: graphics::State,
+}
+
+impl RenderedWindow {
+    /// Constructs a new rendered window
+    ///
+    /// # Parameters
+    ///
+    /// window: The window to add a render state to
+    pub async fn new(window: Window, graphics_settings: graphics::Settings) -> Result<Self, render::NewRenderStateError> {
+        let window = Arc::new(window);
+        let render_state = render::RenderState::new(&window).await?;
+        let graphics_state = graphics::State::new(&render_state, graphics_settings);
+
+        return Ok(Self {
+            window,
+            render_state,
+            graphics_state,
+        });
+    }
+
+    /// Retrieves a reference to the render state
+    pub fn get_render_state(&self) -> &render::RenderState {
+        return &self.render_state;
+    }
+
+    /// Retrieves a mutable reference to the render state
+    pub fn get_render_state_mut(&mut self) -> &mut render::RenderState {
+        return &mut self.render_state;
+    }
+
+    /// Retrieves a reference to the window
+    pub fn get_window(&self) -> &Window {
+        return &self.window;
     }
 }
