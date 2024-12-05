@@ -29,7 +29,9 @@ impl State {
     ///
     /// # Parameters
     ///
-    /// background: The color of the background
+    /// render_state: The render state to use for rendering
+    ///
+    /// settings: The settings for this state
     pub fn new(render_state: &render::RenderState, settings: Settings) -> Self {
         // Create pipelines
         let pipelines = Pipelines::new(render_state);
@@ -47,6 +49,30 @@ impl State {
             uniforms,
             buffers_hex,
         };
+    }
+
+    /// Sets the color of the background
+    ///
+    /// # Parameters
+    ///
+    /// color: The color to set for the background
+    pub fn set_color_background(&mut self, color: wgpu::Color) {
+        self.settings.color_background = color;
+    }
+
+    /// Sets the color of the edges
+    ///
+    /// # Parameters
+    ///
+    /// render_state: The render state to use for rendering
+    ///
+    /// color: The new color for the edges
+    pub fn set_color_edge(&mut self, render_state: &render::RenderState, color: wgpu::Color) {
+        self.settings.color_edge = color;
+
+        // Update the gpu data
+        self.uniforms
+            .write_edge_color(render_state, &self.settings.color_edge);
     }
 
     /// Renders the state onto the given view
