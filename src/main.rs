@@ -5,6 +5,7 @@ use winit::dpi::PhysicalSize;
 pub mod application;
 pub mod graphics;
 pub mod render;
+pub mod types;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -18,14 +19,21 @@ fn main() {
     let size = PhysicalSize::new(500, 500);
 
     // Set graphics settings
-    let background_color = wgpu::Color {
+    let color_background = wgpu::Color {
         r: 1.0,
         g: 1.0,
         b: 1.0,
         a: 1.0,
     };
+    let color_edge = wgpu::Color {
+        r: 0.1,
+        g: 0.1,
+        b: 0.1,
+        a: 1.0,
+    };
     let graphics_settings = graphics::Settings {
-        background: background_color,
+        color_background,
+        color_edge,
     };
 
     // Setup the main loop
