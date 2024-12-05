@@ -1,10 +1,14 @@
 // Uniforms
-// The draw mode, 0: fill mode, 1: edge mode
+// The transform to apply to each vertex
 @group(0) @binding(0)
+var<uniform> transform: mat2x2<f32>;
+
+// The draw mode, 0: fill mode, 1: edge mode
+@group(0) @binding(1)
 var<uniform> draw_mode: u32;
 
 // The color to use for drawing edges
-@group(0) @binding(1)
+@group(0) @binding(2)
 var<uniform> edge_color: vec4<f32>;
 
 // Type definitions
@@ -18,7 +22,7 @@ fn vs_main(
     @location(0) hex_offset: vec2<f32>,
 ) -> VertexOutput {
     var out: VertexOutput;
-    var pos = hex_offset;
+    var pos = transform * hex_offset;
     out.clip_position = vec4<f32>(pos, 0.0, 1.0);
     return out;
 }

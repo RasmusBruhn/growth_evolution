@@ -1,4 +1,4 @@
-use crate::render;
+use crate::{render, types};
 use wgpu::util::DeviceExt;
 
 const INV_SQRT_3: f64 = 0.5773502691896257645091487805019574556476017512701268760186023264;
@@ -82,9 +82,16 @@ impl State {
     /// render_state: The render state to use for rendering
     ///
     /// view: The texture view to render to
-    pub fn render(&self, render_state: &render::RenderState, view: &wgpu::TextureView) {
-        self.render_single(render_state, view, DrawMode::Fill);
-        self.render_single(render_state, view, DrawMode::Edge);
+    /// 
+    /// transform: The transform to go from world to screen coordinates
+    pub fn render(
+        &self,
+        render_state: &render::RenderState,
+        view: &wgpu::TextureView,
+        transform: &types::Transform2D,
+    ) {
+        self.render_single(render_state, view, transform, DrawMode::Fill);
+        self.render_single(render_state, view, transform, DrawMode::Edge);
     }
 
     /// Renders the state onto the given view
@@ -94,16 +101,20 @@ impl State {
     /// render_state: The render state to use for rendering
     ///
     /// view: The texture view to render to
+    /// 
+    /// transform: The transform to go from world to screen coordinates
     ///
     /// draw_mode: Describes wether to draw with fill or outline mode
     fn render_single(
         &self,
         render_state: &render::RenderState,
         view: &wgpu::TextureView,
+        transform: &types::Transform2D,
         draw_mode: DrawMode,
     ) {
-        // Set the draw mode
+        // Set the draw mode and transform
         self.uniforms.write_draw_mode(render_state, draw_mode);
+        self.uniforms.write_transform(render_state, transform);
 
         // Create the encoder
         let mut encoder =
@@ -286,6 +297,7 @@ impl Pipelines {
 
 /// Holds all of the global uniforms for the shader and the bind group for them
 struct Uniforms {
+    transform: wgpu::Buffer,
     /// The draw mode buffer
     draw_mode: wgpu::Buffer,
     /// The edge color buffer
@@ -301,6 +313,16 @@ impl Uniforms {
     ///
     /// render_state: The render state to use for rendering
     fn new(render_state: &render::RenderState) -> Self {
+        // Create transform buffer
+        let transform = render_state
+            .get_device()
+            .create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Transform Buffer"),
+                size: (std::mem::size_of::<f32>() * 4) as u64,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+
         // Create draw mode buffer
         let draw_mode = render_state
             .get_device()
@@ -330,20 +352,40 @@ impl Uniforms {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: draw_mode.as_entire_binding(),
+                        resource: transform.as_entire_binding(),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
+                        resource: draw_mode.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
                         resource: edge_color.as_entire_binding(),
                     },
                 ],
             });
 
         Self {
+            transform,
             draw_mode,
             edge_color,
             bind_group,
         }
+    }
+
+    /// Update the transform, this must be run once before the first rendering as it is not initialized
+    ///
+    /// # Parameters
+    ///
+    /// render_state: The render state to use for rendering
+    ///
+    /// transform: The transform to apply to all vertices going from world coordinates to screen coordinates
+    fn write_transform(&self, render_state: &render::RenderState, transform: &types::Transform2D) {
+        render_state.get_queue().write_buffer(
+            &self.transform,
+            0,
+            bytemuck::cast_slice(&[transform.get_data_center_transform()]),
+        );
     }
 
     /// Update the draw mode, this must be run once before the first rendering as it is not initialized
@@ -398,7 +440,7 @@ impl Uniforms {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        visibility: wgpu::ShaderStages::VERTEX,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -408,6 +450,16 @@ impl Uniforms {
                     },
                     wgpu::BindGroupLayoutEntry {
                         binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
                         visibility: wgpu::ShaderStages::FRAGMENT,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,

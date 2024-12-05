@@ -1,5 +1,5 @@
-use crate::{graphics, render};
-use std::sync::Arc;
+use crate::{graphics, render, types};
+use std::{f64::consts::PI, sync::Arc};
 use winit::{
     application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop,
     window::Window,
@@ -106,7 +106,7 @@ impl MainLoop {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         // Draw the map
-        window.graphics_state.render(window.get_render_state(), &view);
+        window.graphics_state.render(window.get_render_state(), &view, &types::Transform2D::rotation(PI / 12.0));
 
         // Show to screen
         output_texture.present();
