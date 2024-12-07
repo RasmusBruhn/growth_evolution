@@ -8,6 +8,7 @@ pub mod graphics;
 pub mod map;
 pub mod render;
 pub mod types;
+pub mod camera;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");

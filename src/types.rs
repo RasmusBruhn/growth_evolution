@@ -1,6 +1,6 @@
 use std::{
     f64::consts::PI,
-    ops::{Add, Mul, Neg, Sub},
+    ops::{Add, Div, Mul, Neg, Sub},
 };
 
 /// A 2D point
@@ -22,6 +22,16 @@ impl Point {
     /// y: The y-coordinate
     pub fn new(x: f64, y: f64) -> Self {
         return Self { x, y };
+    }
+
+    /// Calculates the norm squared of the point
+    pub fn norm_squared(&self) -> f64 {
+        return self.x * self.x + self.y * self.y;
+    }
+
+    /// Calculates the norm of the point
+    pub fn norm(&self) -> f64 {
+        return self.norm_squared().sqrt();
     }
 
     /// Retrieves the data for the gpu
@@ -178,6 +188,50 @@ impl Mul<&f64> for &Point {
     fn mul(self, rhs: &f64) -> Self::Output {
         let x = self.x * rhs;
         let y = self.y * rhs;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Div<f64> for Point {
+    type Output = Point;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let x = self.x / rhs;
+        let y = self.y / rhs;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Div<&f64> for Point {
+    type Output = Point;
+
+    fn div(self, rhs: &f64) -> Self::Output {
+        let x = self.x / rhs;
+        let y = self.y / rhs;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Div<f64> for &Point {
+    type Output = Point;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        let x = self.x / rhs;
+        let y = self.y / rhs;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Div<&f64> for &Point {
+    type Output = Point;
+
+    fn div(self, rhs: &f64) -> Self::Output {
+        let x = self.x / rhs;
+        let y = self.y / rhs;
 
         return Self::Output { x, y };
     }
@@ -849,13 +903,13 @@ pub struct Gaussian {
 
 impl Gaussian {
     /// Constructs a new Gaussian
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// norm: The normalization of the Gaussian
-    /// 
+    ///
     /// mean: The mean value of the Gaussian
-    /// 
+    ///
     /// cov: The covariance matrix of the Gaussian
     pub fn new(norm: f64, mean: Point, cov: Matrix) -> Self {
         return Self {
