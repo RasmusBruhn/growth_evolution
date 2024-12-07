@@ -149,18 +149,20 @@ impl MapData for MapCyclic {
         };
     }
 
-    fn get_chunks(&self) -> Vec<&Chunk> {
-        return iter::once(&self.chunks_bulk)
-            .chain(self.chunks_edge.iter())
-            .chain(self.chunks_vertex.iter())
-            .collect();
+    fn get_chunks(&self) -> Box<dyn Iterator<Item = &Chunk> + '_> {
+        return Box::new(
+            iter::once(&self.chunks_bulk)
+                .chain(self.chunks_edge.iter())
+                .chain(self.chunks_vertex.iter()),
+        );
     }
 
-    fn get_chunks_mut(&mut self) -> Vec<&mut Chunk> {
-        return iter::once(&mut self.chunks_bulk)
-            .chain(self.chunks_edge.iter_mut())
-            .chain(self.chunks_vertex.iter_mut())
-            .collect();
+    fn get_chunks_mut(&mut self) -> Box<dyn Iterator<Item = &mut Chunk> + '_> {
+        return Box::new(
+            iter::once(&mut self.chunks_bulk)
+                .chain(self.chunks_edge.iter_mut())
+                .chain(self.chunks_vertex.iter_mut()),
+        );
     }
 }
 
@@ -367,10 +369,10 @@ pub trait MapData: Debug {
     fn get_chunk_mut(&mut self, chunk_type: &ChunkType, index: usize) -> &mut Chunk;
 
     /// Retrieves an iterator over all chunks
-    fn get_chunks(&self) -> Vec<&Chunk>;
+    fn get_chunks(&self) -> Box<dyn Iterator<Item = &Chunk> + '_>;
 
     /// Retrieves an iterator over all mutable chunks
-    fn get_chunks_mut(&mut self) -> Vec<&mut Chunk>;
+    fn get_chunks_mut(&mut self) -> Box<dyn Iterator<Item = &mut Chunk> + '_>;
 }
 
 /// A chunk of tiles clustered together can be used as the bulk, an edge or a vertex
