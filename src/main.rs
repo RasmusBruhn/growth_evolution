@@ -1,14 +1,15 @@
 use std::{env, f64::consts::PI};
 
+use constants::FRAMERATE;
 use winit::dpi::PhysicalSize;
 
 pub mod application;
+pub mod camera;
 pub mod constants;
 pub mod graphics;
 pub mod map;
 pub mod render;
 pub mod types;
-pub mod camera;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -60,8 +61,22 @@ fn main() {
     let map_data = Box::new(map::MapCyclic::new());
     let map = map::Map::new(map_data, sources);
 
+    // Setup the camera
+    let camera_transform = types::Transform2D::scale(&types::Point::new(0.5, 0.5))
+        * types::Transform2D::rotation(PI / 12.0);
+    let camera_settings = camera::HexCameraSettings::default().with_framerate(FRAMERATE);
+    let camera = camera::HexCamera::new(
+        &camera_settings,
+        &camera_transform,
+        &PhysicalSize {
+            width: 1,
+            height: 1,
+        },
+    );
+
     // Setup the main loop
-    let mut main_loop = application::MainLoop::new(name, size, graphics_settings, map);
+    let mut main_loop =
+        application::MainLoop::new(name, FRAMERATE, size, graphics_settings, map, camera);
 
     // Run the application
     application::run(&mut main_loop);

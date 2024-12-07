@@ -69,7 +69,7 @@ impl HexCamera {
     /// # Parameters
     ///
     /// event: The key event to handle
-    pub fn apply_key(&mut self, event: KeyEvent) -> bool {
+    pub fn apply_key(&mut self, event: &KeyEvent) -> bool {
         let active = match event.state {
             ElementState::Pressed => true,
             ElementState::Released => false,
@@ -191,6 +191,7 @@ impl HexCamera {
         let transform_rotate = types::Transform2D::rotation(rotate_dir);
 
         self.transform_update = transform_rotate * transform_zoom * transform_move;
+        println!("{:?}", self.transform_update);
     }
 
     /// Converts a size to an aspect transform

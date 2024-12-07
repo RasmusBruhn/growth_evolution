@@ -1,7 +1,13 @@
-use crate::{graphics, map, render, types};
-use std::{f64::consts::PI, sync::Arc};
+use crate::{camera, graphics, map, render};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use winit::{
-    application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop,
+    application::ApplicationHandler,
+    dpi::PhysicalSize,
+    event::{DeviceId, KeyEvent, StartCause, WindowEvent},
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
     window::Window,
 };
 
@@ -29,6 +35,8 @@ pub fn run(main_loop: &mut MainLoop) {
 pub struct MainLoop {
     /// The name of the application
     name: String,
+    /// The framerate of the application
+    framerate: f64,
     /// The size of the application window
     size: PhysicalSize<u32>,
     /// The settings for rendering
@@ -37,6 +45,8 @@ pub struct MainLoop {
     window: Option<RenderedWindow>,
     /// The map to display
     map: map::Map,
+    /// The camera for controlling what is displayed
+    camera: camera::HexCamera,
 }
 
 impl MainLoop {
@@ -49,17 +59,69 @@ impl MainLoop {
     /// size: The size of the window in pixels
     pub fn new(
         name: String,
+        framerate: f64,
         size: PhysicalSize<u32>,
         graphics_settings: graphics::Settings,
         map: map::Map,
+        camera: camera::HexCamera,
     ) -> Self {
         return Self {
             name,
+            framerate,
             size,
             graphics_settings,
             window: None,
             map,
+            camera,
         };
+    }
+
+    /// Handles the initialization of the game loop
+    ///
+    /// # Parameters
+    ///
+    /// event_loop: The event loop to handle
+    fn game_loop_init(&mut self, event_loop: &ActiveEventLoop) {
+        // Set resume time for the first game loop iteration
+        let wait_time = (1e6 / self.framerate).floor() as u64;
+        event_loop.set_control_flow(ControlFlow::WaitUntil(
+            Instant::now() + Duration::from_micros(wait_time),
+        ));
+
+        // Set the size of the camera
+        self.camera.resize(&self.size);
+    }
+
+    /// Handles the iteration of the game loop
+    ///
+    /// # Parameters
+    ///
+    /// event_loop: The event loop to handle
+    ///
+    /// requested_resume: The time requested to resume
+    fn game_loop_iteration(&mut self, event_loop: &ActiveEventLoop, requested_resume: Instant) {
+        // Update the time, make sure we do not get a backlog by skipping if we should wait until before now
+        let mut new_time =
+            requested_resume + Duration::from_micros((1e6 / self.framerate).floor() as u64);
+        let now_time = Instant::now();
+        if new_time < now_time {
+            new_time = now_time;
+        }
+        event_loop.set_control_flow(ControlFlow::WaitUntil(new_time));
+
+        // Get the window and id
+        let window = match &self.window {
+            Some(window) => window,
+            None => {
+                eprintln!("Cannot process game loop because window is not initialized");
+                return;
+            }
+        };
+
+        // Update the camera
+        if self.camera.update_transform() {
+            window.get_window().request_redraw();
+        }
     }
 
     /// Handles a window event for the main window
@@ -71,7 +133,7 @@ impl MainLoop {
     /// event: The event to be handled
     fn main_window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
+        event_loop: &ActiveEventLoop,
         event: winit::event::WindowEvent,
     ) {
         // Find the correct event
@@ -79,6 +141,11 @@ impl MainLoop {
             WindowEvent::CloseRequested => self.main_window_close_request(event_loop),
             WindowEvent::RedrawRequested => self.main_window_redraw_requested(),
             WindowEvent::Resized(size) => self.main_window_resized(size),
+            WindowEvent::KeyboardInput {
+                device_id,
+                event,
+                is_synthetic,
+            } => self.main_window_keyboard_input(device_id, event, is_synthetic),
             _ => (),
         }
     }
@@ -88,7 +155,7 @@ impl MainLoop {
     /// # Parameters
     ///
     /// event_loop: The event loop currently running
-    fn main_window_close_request(&self, event_loop: &winit::event_loop::ActiveEventLoop) {
+    fn main_window_close_request(&self, event_loop: &ActiveEventLoop) {
         // Stop the application
         event_loop.exit();
     }
@@ -117,7 +184,7 @@ impl MainLoop {
         window.graphics_state.render(
             window.get_render_state(),
             &view,
-            &types::Transform2D::rotation(PI / 12.0),
+            &self.camera.get_transform(),
         );
 
         // Show to screen
@@ -125,18 +192,49 @@ impl MainLoop {
     }
 
     /// Run when the size of the window has changed
+    ///
+    /// # Parameters
+    ///
+    /// size: The new size of the window
     fn main_window_resized(&mut self, size: PhysicalSize<u32>) {
+        // Set the new size
         self.size = size;
+
+        // Update the window
         self.window
             .as_mut()
             .expect("Should not happen")
             .get_render_state_mut()
             .resize(size);
+
+        // Update the camera
+        self.camera.resize(&size);
+    }
+
+    /// Handles any keyboard input like camera movement
+    ///
+    /// # Parameters
+    ///
+    /// device_id: The id of the device giving the input
+    ///
+    /// event: The event to handle
+    ///
+    /// is_synthetic: True if the event was created by winit
+    fn main_window_keyboard_input(
+        &mut self,
+        _device_id: DeviceId,
+        event: KeyEvent,
+        _is_synthetic: bool,
+    ) {
+        // Handle camera events, stop if input was captured
+        if self.camera.apply_key(&event) {
+            return;
+        }
     }
 }
 
 impl ApplicationHandler for MainLoop {
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         // Open a new window
         let window_attributes = Window::default_attributes()
             .with_title(&self.name)
@@ -165,7 +263,7 @@ impl ApplicationHandler for MainLoop {
 
     fn window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
+        event_loop: &ActiveEventLoop,
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
@@ -184,12 +282,23 @@ impl ApplicationHandler for MainLoop {
         }
     }
 
-    fn suspended(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
+    fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: StartCause) {
+        // Figure out why it is waiting
+        match cause {
+            StartCause::Init => self.game_loop_init(event_loop),
+            StartCause::ResumeTimeReached {
+                requested_resume, ..
+            } => self.game_loop_iteration(event_loop, requested_resume),
+            _ => (),
+        }
+    }
+
+    fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
         // Close the window
         self.window = None;
     }
 
-    fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
+    fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
         // Close the window
         self.window = None;
     }
