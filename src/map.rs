@@ -128,6 +128,27 @@ pub struct MapCyclic {
     chunks_vertex: [Chunk; 2],
 }
 
+impl MapCyclic {
+    pub fn new() -> Self {
+        let chunks_bulk = Chunk::new_empty(ChunkType::Bulk, 0);
+        let chunks_edge = [
+            Chunk::new_empty(ChunkType::Edge(ChunkEdgeType::Top), 0),
+            Chunk::new_empty(ChunkType::Edge(ChunkEdgeType::Middle), 0),
+            Chunk::new_empty(ChunkType::Edge(ChunkEdgeType::Bottom), 0),
+        ];
+        let chunks_vertex = [
+            Chunk::new_empty(ChunkType::Vertex(ChunkVertexType::Top), 0),
+            Chunk::new_empty(ChunkType::Vertex(ChunkVertexType::Bottom), 0),
+        ];
+
+        return Self {
+            chunks_bulk,
+            chunks_edge,
+            chunks_vertex,
+        };
+    }
+}
+
 impl MapData for MapCyclic {
     fn get_index(&self, _chunk_type: &ChunkType, _coordinates: types::Index) -> Option<usize> {
         return Some(0);

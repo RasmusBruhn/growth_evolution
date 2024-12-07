@@ -848,6 +848,23 @@ pub struct Gaussian {
 }
 
 impl Gaussian {
+    /// Constructs a new Gaussian
+    /// 
+    /// # Parameters
+    /// 
+    /// norm: The normalization of the Gaussian
+    /// 
+    /// mean: The mean value of the Gaussian
+    /// 
+    /// cov: The covariance matrix of the Gaussian
+    pub fn new(norm: f64, mean: Point, cov: Matrix) -> Self {
+        return Self {
+            norm,
+            mean,
+            matrix: cov.inv() * 0.5,
+        };
+    }
+
     /// Evaluates the Gaussian in a number of locations
     ///
     /// # Parameters

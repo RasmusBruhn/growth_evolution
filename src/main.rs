@@ -1,13 +1,13 @@
-use std::env;
+use std::{env, f64::consts::PI};
 
 use winit::dpi::PhysicalSize;
 
 pub mod application;
+pub mod constants;
 pub mod graphics;
+pub mod map;
 pub mod render;
 pub mod types;
-pub mod map;
-pub mod constants;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -38,8 +38,29 @@ fn main() {
         color_edge,
     };
 
+    // Setup the map
+    let sources = map::SourceMap {
+        nutrients: vec![map::Source::Gaussian(types::Gaussian::new(
+            2.0 * PI * 1.0 * 1.0,
+            types::Point::new(0.0, 0.0),
+            types::Matrix::new(&[[1.0, 0.0], [0.0, 1.0]]),
+        ))],
+        energy: vec![map::Source::Gaussian(types::Gaussian::new(
+            2.0 * PI * 2.0 * 1.0,
+            types::Point::new(3.0, 0.0),
+            types::Matrix::new(&[[1.0, 0.0], [0.0, 2.0]]),
+        ))],
+        water: vec![map::Source::Gaussian(types::Gaussian::new(
+            2.0 * PI * 1.5 * 0.5,
+            types::Point::new(0.0, 19.0),
+            types::Matrix::new(&[[1.0, 0.5], [0.5, 1.0]]),
+        ))],
+    };
+    let map_data = Box::new(map::MapCyclic::new());
+    let map = map::Map::new(map_data, sources);
+
     // Setup the main loop
-    let mut main_loop = application::MainLoop::new(name, size, graphics_settings);
+    let mut main_loop = application::MainLoop::new(name, size, graphics_settings, map);
 
     // Run the application
     application::run(&mut main_loop);

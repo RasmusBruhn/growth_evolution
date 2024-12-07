@@ -1,4 +1,4 @@
-use crate::{graphics, render, types};
+use crate::{graphics, map, render, types};
 use std::{f64::consts::PI, sync::Arc};
 use winit::{
     application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoop,
@@ -35,6 +35,8 @@ pub struct MainLoop {
     graphics_settings: graphics::Settings,
     /// The currently opened window of the application
     window: Option<RenderedWindow>,
+    /// The map to display
+    map: map::Map,
 }
 
 impl MainLoop {
@@ -45,12 +47,18 @@ impl MainLoop {
     /// name: The name of the application shown on the window
     ///
     /// size: The size of the window in pixels
-    pub fn new(name: String, size: PhysicalSize<u32>, graphics_settings: graphics::Settings) -> Self {
+    pub fn new(
+        name: String,
+        size: PhysicalSize<u32>,
+        graphics_settings: graphics::Settings,
+        map: map::Map,
+    ) -> Self {
         return Self {
             name,
             size,
             graphics_settings,
             window: None,
+            map,
         };
     }
 
@@ -106,7 +114,11 @@ impl MainLoop {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         // Draw the map
-        window.graphics_state.render(window.get_render_state(), &view, &types::Transform2D::rotation(PI / 12.0));
+        window.graphics_state.render(
+            window.get_render_state(),
+            &view,
+            &types::Transform2D::rotation(PI / 12.0),
+        );
 
         // Show to screen
         output_texture.present();
@@ -140,7 +152,8 @@ impl ApplicationHandler for MainLoop {
         };
 
         // Add a render state
-        self.window = match pollster::block_on(RenderedWindow::new(window, self.graphics_settings)) {
+        self.window = match pollster::block_on(RenderedWindow::new(window, self.graphics_settings))
+        {
             Ok(value) => Some(value),
             Err(error) => {
                 eprintln!("Unable to add render state: {:?}", error);
@@ -198,7 +211,10 @@ impl RenderedWindow {
     /// # Parameters
     ///
     /// window: The window to add a render state to
-    pub async fn new(window: Window, graphics_settings: graphics::Settings) -> Result<Self, render::NewRenderStateError> {
+    pub async fn new(
+        window: Window,
+        graphics_settings: graphics::Settings,
+    ) -> Result<Self, render::NewRenderStateError> {
         let window = Arc::new(window);
         let render_state = render::RenderState::new(&window).await?;
         let graphics_state = graphics::State::new(&render_state, graphics_settings);
