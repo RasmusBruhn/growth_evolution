@@ -6,6 +6,8 @@ pub mod application;
 pub mod graphics;
 pub mod render;
 pub mod types;
+pub mod map;
+pub mod constants;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");

@@ -604,6 +604,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "env_logger",
+ "once_cell",
  "pollster",
  "thiserror 2.0.4",
  "wgpu",

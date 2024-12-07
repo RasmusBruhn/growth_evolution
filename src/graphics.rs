@@ -1,7 +1,5 @@
-use crate::{render, types};
+use crate::{constants::INV_SQRT_3, render, types};
 use wgpu::util::DeviceExt;
-
-const INV_SQRT_3: f64 = 0.5773502691896257645091487805019574556476017512701268760186023264;
 
 /// All settings for rendering
 #[derive(Clone, Copy, Debug)]
@@ -82,7 +80,7 @@ impl State {
     /// render_state: The render state to use for rendering
     ///
     /// view: The texture view to render to
-    /// 
+    ///
     /// transform: The transform to go from world to screen coordinates
     pub fn render(
         &self,
@@ -101,7 +99,7 @@ impl State {
     /// render_state: The render state to use for rendering
     ///
     /// view: The texture view to render to
-    /// 
+    ///
     /// transform: The transform to go from world to screen coordinates
     ///
     /// draw_mode: Describes wether to draw with fill or outline mode

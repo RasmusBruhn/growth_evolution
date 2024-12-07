@@ -1,12 +1,15 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    f64::consts::PI,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 /// A 2D point
 #[derive(Clone, Copy, Debug)]
 pub struct Point {
     /// The x-coordinate
-    x: f64,
+    pub x: f64,
     /// The y-coordinate
-    y: f64,
+    pub y: f64,
 }
 
 impl Point {
@@ -18,27 +21,17 @@ impl Point {
     ///
     /// y: The y-coordinate
     pub fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
-    }
-
-    /// Retrieves the x-coordinate
-    pub fn get_x(&self) -> f64 {
-        self.x
-    }
-
-    /// Retrieves the y-coordinate
-    pub fn get_y(&self) -> f64 {
-        self.y
+        return Self { x, y };
     }
 
     /// Retrieves the data for the gpu
     pub fn get_data(&self) -> [f32; 2] {
-        [self.x as f32, self.y as f32]
+        return [self.x as f32, self.y as f32];
     }
 
     /// Converts it to a size
     pub fn to_size(&self) -> Size {
-        Size::new(self.x, self.y)
+        return Size::new(self.x, self.y);
     }
 }
 
@@ -46,7 +39,7 @@ impl Neg for Point {
     type Output = Point;
 
     fn neg(self) -> Self::Output {
-        Self::new(-self.x, -self.y)
+        return Self::Output::new(-self.x, -self.y);
     }
 }
 
@@ -54,7 +47,7 @@ impl Neg for &Point {
     type Output = Point;
 
     fn neg(self) -> Self::Output {
-        Point::new(-self.x, -self.y)
+        return Self::Output::new(-self.x, -self.y);
     }
 }
 
@@ -65,7 +58,7 @@ impl Add<Point> for Point {
         let x = self.x + rhs.x;
         let y = self.y + rhs.y;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -76,7 +69,7 @@ impl Add<&Point> for Point {
         let x = self.x + rhs.x;
         let y = self.y + rhs.y;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -87,7 +80,7 @@ impl Add<Point> for &Point {
         let x = self.x + rhs.x;
         let y = self.y + rhs.y;
 
-        Point { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -98,7 +91,7 @@ impl Add<&Point> for &Point {
         let x = self.x + rhs.x;
         let y = self.y + rhs.y;
 
-        Point { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -109,7 +102,7 @@ impl Sub<Point> for Point {
         let x = self.x - rhs.x;
         let y = self.y - rhs.y;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -120,7 +113,7 @@ impl Sub<&Point> for Point {
         let x = self.x - rhs.x;
         let y = self.y - rhs.y;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -131,7 +124,7 @@ impl Sub<Point> for &Point {
         let x = self.x - rhs.x;
         let y = self.y - rhs.y;
 
-        Point { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -142,7 +135,7 @@ impl Sub<&Point> for &Point {
         let x = self.x - rhs.x;
         let y = self.y - rhs.y;
 
-        Point { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -153,7 +146,7 @@ impl Mul<f64> for Point {
         let x = self.x * rhs;
         let y = self.y * rhs;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -164,7 +157,7 @@ impl Mul<&f64> for Point {
         let x = self.x * rhs;
         let y = self.y * rhs;
 
-        Self { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -175,7 +168,7 @@ impl Mul<f64> for &Point {
         let x = self.x * rhs;
         let y = self.y * rhs;
 
-        Point { x, y }
+        return Self::Output { x, y };
     }
 }
 
@@ -186,7 +179,39 @@ impl Mul<&f64> for &Point {
         let x = self.x * rhs;
         let y = self.y * rhs;
 
-        Point { x, y }
+        return Self::Output { x, y };
+    }
+}
+
+impl Mul<Point> for Point {
+    type Output = f64;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        return self.x * rhs.x + self.y * rhs.y;
+    }
+}
+
+impl Mul<&Point> for Point {
+    type Output = f64;
+
+    fn mul(self, rhs: &Point) -> Self::Output {
+        return self.x * rhs.x + self.y * rhs.y;
+    }
+}
+
+impl Mul<Point> for &Point {
+    type Output = f64;
+
+    fn mul(self, rhs: Point) -> Self::Output {
+        return self.x * rhs.x + self.y * rhs.y;
+    }
+}
+
+impl Mul<&Point> for &Point {
+    type Output = f64;
+
+    fn mul(self, rhs: &Point) -> Self::Output {
+        return self.x * rhs.x + self.y * rhs.y;
     }
 }
 
@@ -194,9 +219,9 @@ impl Mul<&f64> for &Point {
 #[derive(Clone, Copy, Debug)]
 pub struct Size {
     /// The width
-    w: f64,
+    pub w: f64,
     /// The height
-    h: f64,
+    pub h: f64,
 }
 
 impl Size {
@@ -211,17 +236,7 @@ impl Size {
         let use_w = if w < 0.0 { -w } else { w };
         let use_h = if h < 0.0 { -h } else { h };
 
-        Self { w: use_w, h: use_h }
-    }
-
-    /// Retrieves the width
-    pub fn get_w(&self) -> f64 {
-        self.w
-    }
-
-    /// Retrieves the height
-    pub fn get_h(&self) -> f64 {
-        self.h
+        return Self { w: use_w, h: use_h };
     }
 }
 
@@ -232,7 +247,7 @@ impl Mul<f64> for Size {
         let rhs = if rhs < 0.0 { -rhs } else { rhs };
         let w = self.w * rhs;
         let h = self.h * rhs;
-        Self { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -243,7 +258,7 @@ impl Mul<&f64> for Size {
         let rhs = if *rhs < 0.0 { -*rhs } else { *rhs };
         let w = self.w * rhs;
         let h = self.h * rhs;
-        Self { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -254,7 +269,7 @@ impl Mul<f64> for &Size {
         let rhs = if rhs < 0.0 { -rhs } else { rhs };
         let w = self.w * rhs;
         let h = self.h * rhs;
-        Size { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -265,7 +280,7 @@ impl Mul<&f64> for &Size {
         let rhs = if *rhs < 0.0 { -*rhs } else { *rhs };
         let w = self.w * rhs;
         let h = self.h * rhs;
-        Size { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -276,7 +291,7 @@ impl Add<Size> for Size {
         let w = self.w + rhs.w;
         let h = self.h + rhs.h;
 
-        Self { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -287,7 +302,7 @@ impl Add<&Size> for Size {
         let w = self.w + rhs.w;
         let h = self.h + rhs.h;
 
-        Self { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -298,7 +313,7 @@ impl Add<Size> for &Size {
         let w = self.w + rhs.w;
         let h = self.h + rhs.h;
 
-        Size { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -309,7 +324,7 @@ impl Add<&Size> for &Size {
         let w = self.w + rhs.w;
         let h = self.h + rhs.h;
 
-        Size { w, h }
+        return Self::Output { w, h };
     }
 }
 
@@ -317,9 +332,9 @@ impl Add<&Size> for &Size {
 #[derive(Clone, Copy, Debug)]
 pub struct Index {
     /// The x-index
-    x: i64,
+    pub x: i64,
     /// The y-index
-    y: i64,
+    pub y: i64,
 }
 
 impl Index {
@@ -331,17 +346,51 @@ impl Index {
     ///
     /// y: The y-index
     pub fn new(x: i64, y: i64) -> Self {
-        Self { x, y }
+        return Self { x, y };
     }
+}
 
-    /// Retrieves the x-index
-    pub fn get_x(&self) -> i64 {
-        self.x
+impl Add<Index> for Index {
+    type Output = Index;
+
+    fn add(self, rhs: Index) -> Self::Output {
+        let x = self.x + rhs.x;
+        let y = self.y + rhs.y;
+
+        return Self::Output { x, y };
     }
+}
 
-    /// Retrieves the y-index
-    pub fn get_y(&self) -> i64 {
-        self.y
+impl Add<&Index> for Index {
+    type Output = Index;
+
+    fn add(self, rhs: &Index) -> Self::Output {
+        let x = self.x + rhs.x;
+        let y = self.y + rhs.y;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Add<Index> for &Index {
+    type Output = Index;
+
+    fn add(self, rhs: Index) -> Self::Output {
+        let x = self.x + rhs.x;
+        let y = self.y + rhs.y;
+
+        return Self::Output { x, y };
+    }
+}
+
+impl Add<&Index> for &Index {
+    type Output = Index;
+
+    fn add(self, rhs: &Index) -> Self::Output {
+        let x = self.x + rhs.x;
+        let y = self.y + rhs.y;
+
+        return Self::Output { x, y };
     }
 }
 
@@ -363,27 +412,27 @@ impl View {
     ///
     /// size: The size of the rectangle
     pub fn new(center: &Point, size: &Size) -> Self {
-        Self {
+        return Self {
             center: *center,
             size: *size,
-        }
+        };
     }
 
     /// Retrieves the center
     pub fn get_center(&self) -> &Point {
-        &self.center
+        return &self.center;
     }
 
     /// Retrieves the size
     pub fn get_size(&self) -> &Size {
-        &self.size
+        return &self.size;
     }
 
     pub fn contains(&self, other: &View) -> bool {
-        self.center.x - self.size.w * 0.5 <= other.center.x - other.size.w * 0.5
+        return self.center.x - self.size.w * 0.5 <= other.center.x - other.size.w * 0.5
             && self.center.y - self.size.h * 0.5 <= other.center.y - other.size.h * 0.5
             && self.center.x + self.size.w * 0.5 >= other.center.x + other.size.w * 0.5
-            && self.center.y + self.size.h * 0.5 >= other.center.y + other.size.h * 0.5
+            && self.center.y + self.size.h * 0.5 >= other.center.y + other.size.h * 0.5;
     }
 }
 
@@ -391,7 +440,7 @@ impl View {
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix {
     /// The values of the matrix
-    values: [[f64; 2]; 2],
+    pub values: [[f64; 2]; 2],
 }
 
 impl Matrix {
@@ -401,15 +450,15 @@ impl Matrix {
     ///
     /// values: The values of the matrix, first index is row, second index is column
     pub fn new(values: &[[f64; 2]; 2]) -> Self {
-        Self { values: *values }
+        return Self { values: *values };
     }
 
     /// Transposes the matrix
     pub fn transpose(&self) -> Self {
-        Self::new(&[
+        return Self::new(&[
             [self.values[0][0], self.values[1][0]],
             [self.values[0][1], self.values[1][1]],
-        ])
+        ]);
     }
 
     /// Inverts the matrix
@@ -427,20 +476,43 @@ impl Matrix {
         }
 
         // Calculate inverse
-        Self::new(&[
+        return Self::new(&[
             [self.values[1][1] / d, -self.values[0][1] / d],
             [-self.values[1][0] / d, self.values[0][0] / d],
-        ])
+        ]);
+    }
+
+    /// Calculates the determinant
+    pub fn det(&self) -> f64 {
+        return self.values[0][0] * self.values[1][1] - self.values[0][1] * self.values[1][0];
+    }
+
+    /// Calculates the two eigenvalues sorting them from largest to smallest
+    pub fn eigenvalues(&self) -> [f64; 2] {
+        let d = (self.values[0][0] + self.values[1][1]) * (self.values[0][0] + self.values[1][1])
+            - 4.0 * self.det();
+
+        // Make sure it is not invalid
+        if cfg!(debug_assertions) && d < 0.0 {
+            panic!("The matrix is singular: {:?}", self);
+        }
+
+        let sqrt_d = d.sqrt();
+
+        return [
+            0.5 * ((self.values[0][0] + self.values[1][1]) + sqrt_d),
+            0.5 * ((self.values[0][0] + self.values[1][1]) - sqrt_d),
+        ];
     }
 
     /// Retrieves the data for the gpu
     pub fn get_data(&self) -> [f32; 4] {
-        [
+        return [
             self.values[0][0] as f32,
             self.values[1][0] as f32,
             self.values[0][1] as f32,
             self.values[1][1] as f32,
-        ]
+        ];
     }
 }
 
@@ -448,7 +520,7 @@ impl Mul<Matrix> for Matrix {
     type Output = Matrix;
 
     fn mul(self, rhs: Matrix) -> Self::Output {
-        Self::new(&[
+        return Self::Output::new(&[
             [
                 self.values[0][0] * rhs.values[0][0] + self.values[0][1] * rhs.values[1][0],
                 self.values[0][0] * rhs.values[0][1] + self.values[0][1] * rhs.values[1][1],
@@ -457,7 +529,7 @@ impl Mul<Matrix> for Matrix {
                 self.values[1][0] * rhs.values[0][0] + self.values[1][1] * rhs.values[1][0],
                 self.values[1][0] * rhs.values[0][1] + self.values[1][1] * rhs.values[1][1],
             ],
-        ])
+        ]);
     }
 }
 
@@ -465,10 +537,10 @@ impl Neg for Matrix {
     type Output = Matrix;
 
     fn neg(self) -> Self::Output {
-        Self::new(&[
+        return Self::Output::new(&[
             [-self.values[0][0], -self.values[0][1]],
             [-self.values[1][0], -self.values[1][1]],
-        ])
+        ]);
     }
 }
 
@@ -476,7 +548,7 @@ impl Add<Matrix> for Matrix {
     type Output = Matrix;
 
     fn add(self, rhs: Matrix) -> Self::Output {
-        Self::new(&[
+        return Self::Output::new(&[
             [
                 self.values[0][0] + rhs.values[0][0],
                 self.values[0][1] + rhs.values[0][1],
@@ -485,7 +557,7 @@ impl Add<Matrix> for Matrix {
                 self.values[1][0] + rhs.values[1][0],
                 self.values[1][1] + rhs.values[1][1],
             ],
-        ])
+        ]);
     }
 }
 
@@ -493,7 +565,7 @@ impl Sub<Matrix> for Matrix {
     type Output = Matrix;
 
     fn sub(self, rhs: Matrix) -> Self::Output {
-        Self::new(&[
+        return Self::Output::new(&[
             [
                 self.values[0][0] - rhs.values[0][0],
                 self.values[0][1] - rhs.values[0][1],
@@ -502,7 +574,7 @@ impl Sub<Matrix> for Matrix {
                 self.values[1][0] - rhs.values[1][0],
                 self.values[1][1] - rhs.values[1][1],
             ],
-        ])
+        ]);
     }
 }
 
@@ -510,10 +582,21 @@ impl Mul<Point> for Matrix {
     type Output = Point;
 
     fn mul(self, rhs: Point) -> Self::Output {
-        Point::new(
+        return Self::Output::new(
             self.values[0][0] * rhs.x + self.values[0][1] * rhs.y,
             self.values[1][0] * rhs.x + self.values[1][1] * rhs.y,
-        )
+        );
+    }
+}
+
+impl Mul<f64> for Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        return Self::Output::new(&[
+            [rhs * self.values[0][0], rhs * self.values[0][1]],
+            [rhs * self.values[1][0], rhs * self.values[1][1]],
+        ]);
     }
 }
 
@@ -531,9 +614,9 @@ impl Mul<Point> for Matrix {
 #[derive(Copy, Clone, Debug)]
 pub struct Transform2D {
     /// The transform to apply relative to the center
-    center_transform: Matrix,
+    pub center_transform: Matrix,
     /// The center of the coordinate system
-    center: Point,
+    pub center: Point,
 }
 
 impl Transform2D {
@@ -542,10 +625,10 @@ impl Transform2D {
         let center_transform = Matrix::new(&[[1.0, 0.0], [0.0, 1.0]]);
         let center = Point::new(0.0, 0.0);
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Rotate around origo
@@ -558,10 +641,10 @@ impl Transform2D {
             Matrix::new(&[[angle.cos(), -angle.sin()], [angle.sin(), angle.cos()]]);
         let center = Point::new(0.0, 0.0);
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Rotate around center
@@ -576,10 +659,10 @@ impl Transform2D {
             Matrix::new(&[[angle.cos(), -angle.sin()], [angle.sin(), angle.cos()]]);
         let center = *rotation_center - center_transform.inv() * *rotation_center;
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Scale at origo
@@ -591,10 +674,10 @@ impl Transform2D {
         let center_transform = Matrix::new(&[[scale.x, 0.0], [0.0, scale.y]]);
         let center = Point::new(0.0, 0.0);
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Scale at center
@@ -608,10 +691,10 @@ impl Transform2D {
         let center_transform = Matrix::new(&[[scale.x, 0.0], [0.0, scale.y]]);
         let center = *scale_center - center_transform.inv() * *scale_center;
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Translates a point
@@ -623,10 +706,10 @@ impl Transform2D {
         let center_transform = Matrix::new(&[[1.0, 0.0], [0.0, 1.0]]);
         let center = *offset;
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Retrieves the inverse transform
@@ -634,30 +717,30 @@ impl Transform2D {
         let center_transform = self.center_transform.inv();
         let center = -self.center_transform * self.center;
 
-        Self {
+        return Self {
             center_transform,
             center,
-        }
+        };
     }
 
     /// Retrieves the offset
     pub fn get_center(&self) -> &Point {
-        &self.center
+        return &self.center;
     }
 
     /// Retrieves the center transform
     pub fn get_center_transform(&self) -> &Matrix {
-        &self.center_transform
+        return &self.center_transform;
     }
 
     /// Retrieves the data for the offset
     pub fn get_data_offset(&self) -> [f32; 2] {
-        self.center.get_data()
+        return self.center.get_data();
     }
 
     /// Retrieves the data for the center transform
     pub fn get_data_center_transform(&self) -> [f32; 4] {
-        self.center_transform.get_data()
+        return self.center_transform.get_data();
     }
 }
 
@@ -669,10 +752,10 @@ impl Mul<Transform2D> for Transform2D {
         let center_transform = self.center_transform * rhs.center_transform;
         let center = rhs.center + rhs.center_transform.inv() * self.center;
 
-        Self {
+        return Self::Output {
             center_transform,
             center,
-        }
+        };
     }
 }
 
@@ -684,10 +767,10 @@ impl Mul<&Transform2D> for Transform2D {
         let center_transform = self.center_transform * rhs.center_transform;
         let center = rhs.center + rhs.center_transform.inv() * self.center;
 
-        Self {
+        return Self::Output {
             center_transform,
             center,
-        }
+        };
     }
 }
 
@@ -699,10 +782,10 @@ impl Mul<Transform2D> for &Transform2D {
         let center_transform = self.center_transform * rhs.center_transform;
         let center = rhs.center + rhs.center_transform.inv() * self.center;
 
-        Transform2D {
+        return Self::Output {
             center_transform,
             center,
-        }
+        };
     }
 }
 
@@ -714,10 +797,10 @@ impl Mul<&Transform2D> for &Transform2D {
         let center_transform = self.center_transform * rhs.center_transform;
         let center = rhs.center + rhs.center_transform.inv() * self.center;
 
-        Transform2D {
+        return Self::Output {
             center_transform,
             center,
-        }
+        };
     }
 }
 
@@ -725,7 +808,7 @@ impl Mul<Point> for Transform2D {
     type Output = Point;
 
     fn mul(self, rhs: Point) -> Self::Output {
-        self.center_transform * (rhs - self.center)
+        return self.center_transform * (rhs - self.center);
     }
 }
 
@@ -733,7 +816,7 @@ impl Mul<&Point> for Transform2D {
     type Output = Point;
 
     fn mul(self, rhs: &Point) -> Self::Output {
-        self.center_transform * (rhs - self.center)
+        return self.center_transform * (rhs - self.center);
     }
 }
 
@@ -741,7 +824,7 @@ impl Mul<Point> for &Transform2D {
     type Output = Point;
 
     fn mul(self, rhs: Point) -> Self::Output {
-        self.center_transform * (rhs - self.center)
+        return self.center_transform * (rhs - self.center);
     }
 }
 
@@ -749,6 +832,42 @@ impl Mul<&Point> for &Transform2D {
     type Output = Point;
 
     fn mul(self, rhs: &Point) -> Self::Output {
-        self.center_transform * (rhs - self.center)
+        return self.center_transform * (rhs - self.center);
+    }
+}
+
+/// Describes a single 2D Gaussian
+#[derive(Clone, Copy, Debug)]
+pub struct Gaussian {
+    /// The norm of the Gaussian
+    pub norm: f64,
+    /// The mean of the Gaussian
+    pub mean: Point,
+    /// The inverse covariance matrix divided by 2
+    pub matrix: Matrix,
+}
+
+impl Gaussian {
+    /// Evaluates the Gaussian in a number of locations
+    ///
+    /// # Parameters
+    ///
+    /// points: The points to evaluate at
+    pub fn evaluate(&self, offset: &Point, points: &[Point]) -> Vec<f64> {
+        let coeff = self.norm * self.matrix.det().sqrt() / PI;
+
+        return points
+            .iter()
+            .map(|point| {
+                let rel_point = (point + offset) - self.mean;
+                let exponent = -rel_point * (self.matrix * rel_point);
+                return coeff * exponent.exp();
+            })
+            .collect();
+    }
+
+    /// Retrieves the covariance matrix
+    pub fn get_covariance(&self) -> Matrix {
+        return (self.matrix * 2.0).inv();
     }
 }
